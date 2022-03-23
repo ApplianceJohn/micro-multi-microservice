@@ -5,3 +5,5 @@ node_modules
 *~
 #environment variables
 .env
+#config files
+.prettier*
