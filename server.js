@@ -11,10 +11,11 @@ app.use(express.static("public"));
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
-	res.sendFile(__dirname + "/views/index.html");
+	res.sendFile(`${__dirname}/views/index.html`);
 });
 
 app.get("/api/", (req, res) => {
+	console.log("No time provided to API, returning current time obj");
 	const today = new Date();
 	const unixToday = today.getTime();
 	const utcToday = today.toUTCString();
@@ -25,28 +26,27 @@ app.get("/api/", (req, res) => {
 app.get("/api/:time", (req, res) => {
 	const request = req.params.time;
 	const date = new Date(request);
+	console.log(`Initial request param: ${request}`);
 
 	if (!(date instanceof Date) || isNaN(date)) {
 		console.error(
-			"ERR_INVALID_DATE: The request " +
-				request +
-				" produced an invalid output of " +
-				date +
-				"."
+			`ERR_INVALID_DATE: The request "${request}" produced an invalid output: ${date}.`
 		);
 		return res.json({ error: "Invalid Date" });
 	}
 
 	const unixTime = getUnixTime(request);
 	const utcTime = date.toUTCString();
-	res.json({ unix: unixTime, utc: utcTime });
+	const timeObj = { unix: unixTime, utc: utcTime };
+	console.log(`Returning JSON:\n${timeObj}`);
+	res.json(timeObj);
 });
 
 function getUnixTime(request) {
 	console.log("Requesting Unix timestamp...");
 
 	let date = new Date(request);
-	console.log("Created date obj " + date);
+	console.log(`Created date obj ${date}`);
 
 	if (!unixTest(request)) {
 		console.log("Date is UTC, converting to Unix");
@@ -58,10 +58,10 @@ function getUnixTime(request) {
 }
 
 function unixTest(time) {
-	const unixRegex = /[0-9]{1,13}/g;
+	const unixRegex = /^[0-9]{1,13}$/g;
 	return unixRegex.test(time);
 }
 
 const listener = app.listen(process.env.PORT, function () {
-	console.log("Your app is listening on port " + listener.address().port);
+	console.log(`Your app is listening on port ${listener.address().port}`);
 });
