@@ -1,13 +1,10 @@
 //require dotenv to grab port
-require("dotenv").config();
+//import {config} from 'dotenv';
+import express from 'express';
+import cors from 'cors';
 
-// init
-var express = require("express");
-var app = express();
+const app = express();
 
-// enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-// so that your API is remotely testable by FCC
-var cors = require("cors");
 app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
@@ -38,7 +35,7 @@ app.get("/api/:time", (req, res) => {
 
   const time = (() => {
     if (!isUnix) {
-      return Math.floor(truth.getTime());
+      return Math.floor(date.getTime());
     }
     return request * 1;
   })();
@@ -52,6 +49,6 @@ const unixTest = (time) => {
   return unixRegex.test(time);
 };
 
-var listener = app.listen(process.env.PORT, function () {
+const listener = app.listen(process.env.PORT, function () {
   console.log("Your app is listening on port " + listener.address().port);
 });
