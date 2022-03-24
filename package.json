@@ -22,5 +22,8 @@
     "express",
     "freecodecamp"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.11.0"
+  }
 }
