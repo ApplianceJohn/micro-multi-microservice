@@ -25,40 +25,40 @@ app.get("/api/", (req, res) => {
 
 app.get("/api/:time", (req, res) => {
 	const request = req.params.time;
-	const date = new Date(request);
 	console.log(`Initial request param: ${request}`);
+
+	const unix = getCompatibleUnixTime(request);
+	console.log(`Unix time: ${unix.time}\nSource: ${unix.source}`);
+
+	const date = new Date(unix.time);
 
 	if (!(date instanceof Date) || isNaN(date)) {
 		console.error(
-			`ERR_INVALID_DATE: The request "${request}" produced an invalid output: ${date}.`
+			`ERR_INVALID_DATE: The request "${request}" produced an invalid date output.`
 		);
 		return res.json({ error: "Invalid Date" });
 	}
 
-	const unixTime = getUnixTime(request);
-	const utcTime = date.toUTCString();
-	const timeObj = { unix: unixTime, utc: utcTime };
-	console.log(`Returning JSON:\n${timeObj}`);
+	const utc = date.toUTCString();
+	const timeObj = { unix: unix.time, utc: utc };
+	console.log(`Returning JSON:\n${JSON.stringify(timeObj)}`);
 	res.json(timeObj);
 });
 
-function getUnixTime(request) {
+function getCompatibleUnixTime(request) {
 	console.log("Requesting Unix timestamp...");
-
-	let date = new Date(request);
-	console.log(`Created date obj ${date}`);
 
 	if (!unixTest(request)) {
 		console.log("Date is UTC, converting to Unix");
-		return date.getTime();
+		return { time: new Date(request).getTime(), source: "utc" };
 	}
 
 	console.log("Date is Unix");
-	return request * 1; //a cheap "to int"
+	return { time: request * 1, source: "unix" }; //a cheap "to int"
 }
 
 function unixTest(time) {
-	const unixRegex = /^[0-9]{1,13}$/g;
+	const unixRegex = /^\d+$/g;
 	return unixRegex.test(time);
 }
 
