@@ -23,6 +23,14 @@ app.get("/api/", (req, res) => {
 	res.json({ unix: unixToday, utc: utcToday });
 });
 
+app.get("/api/whoami", (req, res) => {
+	res.json({
+		ipaddress: req.headers.host,
+		language: req.headers["accept-language"],
+		software: req.headers["user-agent"],
+	});
+});
+
 app.get("/api/:time", (req, res) => {
 	const request = req.params.time;
 	console.log(`Initial request param: ${request}`);
