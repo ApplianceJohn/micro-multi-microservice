@@ -43,7 +43,7 @@ app.get("/api/whoami", (req, res) => {
 //url shortener microservice
 
 app.post("/api/shorturl", (req, res) => {
-	const urlRegex = /https?:\/\/(www.)?\w+\.\w+\/?/g;
+	const urlRegex = /(https?:\/\/)?(www.)?\w+\.\w+\/?/g;
 	const responseJSON = urlRegex.test(req.body["short-url"])
 		? {
 				original_url: req.body["short-url"],

@@ -3,8 +3,5 @@ node_modules
 #vim temporary files
 *.un
 *~
-#config files
-.prettier*
-.eslintrc.json
 #vs code
 *.code-workspace
