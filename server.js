@@ -1,10 +1,15 @@
 //require dotenv to grab port
 require("dotenv").config();
 const express = require("express");
+const bodyParser = require("body-parser");
 const app = express();
 
 const cors = require("cors");
 app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
+
+//body-parser init
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 // http://expressjs.com/en/starter/static-files.html
 app.use("/css", express.static(`${__dirname}/node_modules/bootstrap/dist/css`));
@@ -37,8 +42,16 @@ app.get("/api/whoami", (req, res) => {
 
 //url shortener microservice
 
-app.get("/api/shorturl/:id", (req, res) => {
-	res.json({ id: req.params.id });
+app.post("/api/shorturl", (req, res) => {
+	const urlRegex = /https?:\/\/(www.)?\w+\.\w+\/?/g;
+	const responseJSON = urlRegex.test(req.body["short-url"])
+		? {
+				original_url: req.body["short-url"],
+				short_url: 0,
+		  }
+		: { error: "invalid url" };
+
+	res.json(responseJSON);
 });
 
 //timestamp microservice
