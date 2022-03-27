@@ -7,12 +7,14 @@ const cors = require("cors");
 app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
-app.use(express.static("public"));
+app.use(express.static(`${__dirname}/node_modules/bootstrap/dist/css`));
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
 	res.sendFile(`${__dirname}/views/index.html`);
 });
+
+//time microservice null handler
 
 app.get("/api/", (req, res) => {
 	console.log("No time provided to API, returning current time obj");
@@ -23,6 +25,8 @@ app.get("/api/", (req, res) => {
 	res.json({ unix: unixToday, utc: utcToday });
 });
 
+//whoami header parser
+
 app.get("/api/whoami", (req, res) => {
 	res.json({
 		ipaddress: req.headers.host,
@@ -30,6 +34,14 @@ app.get("/api/whoami", (req, res) => {
 		software: req.headers["user-agent"],
 	});
 });
+
+//url shortener microservice
+
+app.get("/api/shorturl/:id", (req, res) => {
+	res.json({ id: req.params.id });
+});
+
+//timestamp microservice
 
 app.get("/api/:time", (req, res) => {
 	const request = req.params.time;
@@ -53,6 +65,9 @@ app.get("/api/:time", (req, res) => {
 	res.json(timeObj);
 });
 
+//timestamp supporting functions
+/*****************************/
+
 function getCompatibleUnixTime(request) {
 	console.log("Requesting Unix timestamp...");
 
@@ -69,6 +84,9 @@ function unixTest(time) {
 	const unixRegex = /^\d+$/g;
 	return unixRegex.test(time);
 }
+
+/*****************************/
+//end timestamp functions
 
 const listener = app.listen(process.env.PORT, function () {
 	console.log(`Your app is listening on port ${listener.address().port}`);
