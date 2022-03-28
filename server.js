@@ -15,6 +15,7 @@ mongoose.connect(
 	{ useNewUrlParser: true }
 );
 
+//connect to mongodb database
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error: "));
 db.once("open", function () {
@@ -33,7 +34,7 @@ app.get("/", function (req, res) {
 	res.sendFile(`${__dirname}/views/index.html`);
 });
 
-//time microservice null handler
+//? time microservice null handler
 
 app.get("/api/", (req, res) => {
 	console.log("No time provided to API, returning current time obj");
@@ -44,7 +45,7 @@ app.get("/api/", (req, res) => {
 	res.json({ unix: unixToday, utc: utcToday });
 });
 
-//whoami header parser
+//? whoami header parser
 
 app.get("/api/whoami", (req, res) => {
 	res.json({
@@ -54,10 +55,38 @@ app.get("/api/whoami", (req, res) => {
 	});
 });
 
-//url shortener microservice
+//? url shortener microservice
+//instantiate URL model
+const urlSchema = new mongoose.Schema({
+	original_url: String,
+});
+
+const URL = mongoose.model("URL", urlSchema);
 
 app.post("/api/shorturl", (req, res) => {
-	const urlRegex = /(https?:\/\/)?(www.)?\w+\.\w+\/?/g;
+	const original_url = req.body["short-url"];
+	let urlId;
+
+	const url = new URL({
+		original_url: original_url,
+	});
+
+	//TODO: fix save() async not behaving properly
+	url.save((err, urlObj) => {
+		urlId = err
+			? { value: "", error: err }
+			: { value: urlObj.id, error: "" };
+	}).then(() => {
+		if (urlId.value === "") return res.send(urlId.error);
+	});
+
+	return res.json({
+		original_url: original_url,
+		short_url: urlId.value,
+	});
+
+	//! don't delete regex code!!
+	/* const urlRegex = /(https?:\/\/)?(www.)?\w+\.\w+\/?/g;
 	const responseJSON = urlRegex.test(req.body["short-url"])
 		? {
 				original_url: req.body["short-url"],
@@ -65,10 +94,17 @@ app.post("/api/shorturl", (req, res) => {
 		  }
 		: { error: "invalid url" };
 
-	res.json(responseJSON);
+	res.json(responseJSON);*/
 });
 
-//timestamp microservice
+//TODO: find out how to properly set Mongoose ID
+app.get("/api/shorturl/:urlid", (req, res) => {
+	const id = req.params.urlid;
+	const url = URL.findById(id).original_url;
+	res.redirect(url);
+});
+
+//? timestamp microservice
 
 app.get("/api/:time", (req, res) => {
 	const request = req.params.time;
@@ -92,8 +128,8 @@ app.get("/api/:time", (req, res) => {
 	res.json(timeObj);
 });
 
-//timestamp supporting functions
-/*****************************/
+//? timestamp supporting functions
+//? *******************************
 
 function getCompatibleUnixTime(request) {
 	console.log("Requesting Unix timestamp...");
@@ -112,8 +148,8 @@ function unixTest(time) {
 	return unixRegex.test(time);
 }
 
-/*****************************/
-//end timestamp functions
+//? *******************************
+//? end timestamp functions
 
 const listener = app.listen(process.env.PORT, function () {
 	console.log(`Your app is listening on port ${listener.address().port}`);
