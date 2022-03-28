@@ -2,10 +2,25 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors");
+const mongoose = require("mongoose");
+
 const app = express();
 
-const cors = require("cors");
 app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
+
+//mongoose init
+//TODO: Solve the issue with MongoDB auth
+mongoose.connect(
+	`mongodb+srv://${process.env.MDB_USER}:${process.env.MDB_PASS}@micro-multi-microservic.8nll3.mongodb.net/micro-multi-microservice?retryWrites=true&w=majority`,
+	{ useNewUrlParser: true }
+);
+
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "connection error: "));
+db.once("open", function () {
+	console.log("Connected successfully");
+});
 
 //body-parser init
 app.use(bodyParser.urlencoded({ extended: true }));
