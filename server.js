@@ -10,9 +10,8 @@ const app = express();
 app.use(cors({ optionsSuccessStatus: 200 })); // some legacy browsers choke on 204
 
 //mongoose init
-//TODO: Solve the issue with MongoDB auth
 mongoose.connect(
-	`mongodb+srv://${process.env.MDB_USER}:${process.env.MDB_PASS}@micro-multi-microservic.8nll3.mongodb.net/micro-multi-microservice?retryWrites=true&w=majority`,
+	`mongodb+srv://bdiamond:${process.env.MDB_PASS}@micro-multi-microservic.8nll3.mongodb.net/micro-multi-microservice?retryWrites=true&w=majority`,
 	{ useNewUrlParser: true }
 );
 
