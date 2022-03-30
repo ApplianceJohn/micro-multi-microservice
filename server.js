@@ -65,24 +65,17 @@ const URL = mongoose.model("URL", urlSchema);
 
 app.post("/api/shorturl", (req, res) => {
 	const original_url = req.body["short-url"];
-	let urlId;
 
 	const url = new URL({
 		original_url: original_url,
 	});
 
 	//TODO: fix save() async not behaving properly
-	url.save((err, urlObj) => {
-		urlId = err
-			? { value: "", error: err }
-			: { value: urlObj.id, error: "" };
-	}).then(() => {
-		if (urlId.value === "") return res.send(urlId.error);
-	});
-
-	return res.json({
-		original_url: original_url,
-		short_url: urlId.value,
+	url.save().then((doc) => {
+		res.json({
+			original_url: doc.original_url,
+			short_url: doc.short_url,
+		});
 	});
 
 	//! don't delete regex code!!
@@ -98,10 +91,13 @@ app.post("/api/shorturl", (req, res) => {
 });
 
 //TODO: find out how to properly set Mongoose ID
-app.get("/api/shorturl/:urlid", (req, res) => {
-	const id = req.params.urlid;
-	const url = URL.findById(id).original_url;
-	res.redirect(url);
+app.get("/api/shorturl/:short", (req, res) => {
+	console.log(`loading requested url with id ${req.params.short}`);
+	const shortUrl = req.params.short;
+	URL.findOne({ short_url: shortUrl }).then((doc) => {
+		console.log(`redirecting to ${doc.original_url}`);
+		res.redirect(doc.original_url);
+	});
 });
 
 //? timestamp microservice
