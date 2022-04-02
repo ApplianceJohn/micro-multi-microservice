@@ -22,6 +22,14 @@ db.once("open", function () {
 	console.log("Connected successfully");
 });
 
+//instantiate URL model
+const urlSchema = new mongoose.Schema({
+	original_url: String,
+	short_url: Number,
+});
+
+const URL = mongoose.model("URL", urlSchema);
+
 //body-parser init
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -56,23 +64,58 @@ app.get("/api/whoami", (req, res) => {
 });
 
 //? url shortener microservice
-//instantiate URL model
-const urlSchema = new mongoose.Schema({
-	original_url: String,
-});
 
-const URL = mongoose.model("URL", urlSchema);
+function checkIfUrlExists(url) {
+	return new Promise((pass, fail) => {
+		URL.findOne({ original_url: url }, (err, doc) => {
+			if (err) return fail(err);
+			return pass(doc);
+		});
+	});
+}
 
-app.post("/api/shorturl", (req, res) => {
-	const original_url = req.body["short-url"];
+function getNextUrlIndex() {
+	return new Promise((pass, fail) => {
+		URL.findOne()
+			.sort({ short_url: -1 })
+			.exec((err, url) => {
+				if (err) return fail(err);
+				return pass(url.short_url + 1);
+			});
+	});
+}
+
+app.post("/api/shorturl", async (req, res) => {
+	const originalUrl = req.body["short-url"];
+	let index = 0;
+
+	await checkIfUrlExists(originalUrl)
+		.then((doc) => {
+			if (doc)
+				return res.json({
+					original_url: doc.original_url,
+					short_url: doc.short_url,
+				});
+		})
+		.catch((err) => {
+			return res.send(err);
+		});
+
+	await getNextUrlIndex()
+		.then((value) => {
+			index = value;
+		})
+		.catch((err) => {
+			return res.send(err);
+		});
 
 	const url = new URL({
-		original_url: original_url,
+		original_url: originalUrl,
+		short_url: index,
 	});
 
-	//TODO: fix save() async not behaving properly
 	url.save().then((doc) => {
-		res.json({
+		return res.json({
 			original_url: doc.original_url,
 			short_url: doc.short_url,
 		});
@@ -80,14 +123,14 @@ app.post("/api/shorturl", (req, res) => {
 
 	//! don't delete regex code!!
 	/* const urlRegex = /(https?:\/\/)?(www.)?\w+\.\w+\/?/g;
-	const responseJSON = urlRegex.test(req.body["short-url"])
-		? {
-				original_url: req.body["short-url"],
-				short_url: 0,
-		  }
-		: { error: "invalid url" };
-
-	res.json(responseJSON);*/
+		const responseJSON = urlRegex.test(req.body["short-url"])
+			? {
+					original_url: req.body["short-url"],
+					short_url: 0,
+			  }
+			: { error: "invalid url" };
+	
+		res.json(responseJSON);*/
 });
 
 //TODO: find out how to properly set Mongoose ID
