@@ -1,5 +1,6 @@
 //require dotenv to grab port
 require("dotenv").config();
+const dns = require("dns");
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -65,6 +66,16 @@ app.get("/api/whoami", (req, res) => {
 
 //? url shortener microservice
 
+function isValidUrl(url) {
+	return new Promise((pass, fail) => {
+		const rootPath = url.match(/(\w+.){1,}\w+\/?$/g);
+		dns.lookup(rootPath.join(), (err) => {
+			if (err) return fail(false);
+			return pass(true);
+		});
+	});
+}
+
 function checkIfUrlExists(url) {
 	return new Promise((pass, fail) => {
 		URL.findOne({ original_url: url }, (err, doc) => {
@@ -89,9 +100,15 @@ app.post("/api/shorturl", async (req, res) => {
 	const originalUrl = req.body["short-url"];
 	let index = 0;
 
+	// eslint-disable-next-line no-unused-vars
+	await isValidUrl(originalUrl).catch((err) =>
+		res.json({ error: "invalid url" })
+	);
+
 	await checkIfUrlExists(originalUrl)
 		.then((doc) => {
 			if (doc)
+				//if doc exists
 				return res.json({
 					original_url: doc.original_url,
 					short_url: doc.short_url,
@@ -114,36 +131,45 @@ app.post("/api/shorturl", async (req, res) => {
 		short_url: index,
 	});
 
-	url.save().then((doc) => {
-		return res.json({
-			original_url: doc.original_url,
-			short_url: doc.short_url,
+	if (!res.headersSent) {
+		url.save().then((doc) => {
+			return res.json({
+				original_url: doc.original_url,
+				short_url: doc.short_url,
+			});
 		});
-	});
-
-	//! don't delete regex code!!
-	/* const urlRegex = /(https?:\/\/)?(www.)?\w+\.\w+\/?/g;
-		const responseJSON = urlRegex.test(req.body["short-url"])
-			? {
-					original_url: req.body["short-url"],
-					short_url: 0,
-			  }
-			: { error: "invalid url" };
-	
-		res.json(responseJSON);*/
+	}
 });
 
-//TODO: find out how to properly set Mongoose ID
 app.get("/api/shorturl/:short", (req, res) => {
-	console.log(`loading requested url with id ${req.params.short}`);
 	const shortUrl = req.params.short;
+
 	URL.findOne({ short_url: shortUrl }).then((doc) => {
-		console.log(`redirecting to ${doc.original_url}`);
+		console.log(
+			`redirecting from ${req.params.short} to ${doc.original_url}`
+		);
 		res.redirect(doc.original_url);
 	});
 });
 
 //? timestamp microservice
+
+function getCompatibleUnixTime(request) {
+	console.log("Requesting Unix timestamp...");
+
+	if (!unixTest(request)) {
+		console.log("Date is UTC, converting to Unix");
+		return { time: new Date(request).getTime(), source: "utc" };
+	}
+
+	console.log("Date is Unix");
+	return { time: request * 1, source: "unix" }; //a cheap "to int"
+}
+
+function unixTest(time) {
+	const unixRegex = /^\d+$/g;
+	return unixRegex.test(time);
+}
 
 app.get("/api/:time", (req, res) => {
 	const request = req.params.time;
@@ -166,29 +192,6 @@ app.get("/api/:time", (req, res) => {
 	console.log(`Returning JSON:\n${JSON.stringify(timeObj)}`);
 	res.json(timeObj);
 });
-
-//? timestamp supporting functions
-//? *******************************
-
-function getCompatibleUnixTime(request) {
-	console.log("Requesting Unix timestamp...");
-
-	if (!unixTest(request)) {
-		console.log("Date is UTC, converting to Unix");
-		return { time: new Date(request).getTime(), source: "utc" };
-	}
-
-	console.log("Date is Unix");
-	return { time: request * 1, source: "unix" }; //a cheap "to int"
-}
-
-function unixTest(time) {
-	const unixRegex = /^\d+$/g;
-	return unixRegex.test(time);
-}
-
-//? *******************************
-//? end timestamp functions
 
 const listener = app.listen(process.env.PORT, function () {
 	console.log(`Your app is listening on port ${listener.address().port}`);

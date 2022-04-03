@@ -65,12 +65,19 @@
 			<form action="/api/shorturl" method="post">
 				<div class="form-group">
 					<label for="short-url" class="h4">URL to Shorten</label>
+					<p>
+						<small
+							>URL must be preceded by http:// or https://</small
+						>
+					</p>
 					<input
 						id="short-url"
 						name="short-url"
 						class="form-control form-control-lg mb-3"
 						type="text"
-						placeholder="Enter a valid url"
+						title="URL must be preceded by http:// or https://"
+						pattern="^https?:\/\/.*"
+						placeholder="https://example.com/"
 						required
 					/>
 					<button type="submit" class="btn btn-primary">
