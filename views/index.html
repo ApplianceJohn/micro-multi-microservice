@@ -17,7 +17,7 @@
 			<h1>The Micro-Multi-Microservice</h1>
 			<hr />
 
-			<h2>Timestamp Microservice</h2>
+			<h2>Timestamps</h2>
 
 			<h3>Example Usage:</h3>
 			<ul>
@@ -39,7 +39,7 @@
 				>
 			</p>
 
-			<h2>Request Header Parser Microservice</h2>
+			<h2>Request Header Parser</h2>
 
 			<h3>Example Usage:</h3>
 			<p>
@@ -54,6 +54,37 @@
 					Firefox/50.0"}</code
 				>
 			</p>
+
+			<h2>URL Shortener</h2>
+
+			<h3>Example Usage</h3>
+			<code
+				>POST [project_url]/api/shorturl - https://www.google.com</code
+			>
+
+			<form action="/api/shorturl" method="post">
+				<div class="form-group">
+					<label for="short-url" class="h4">URL to Shorten</label>
+					<p>
+						<small
+							>URL must be preceded by http:// or https://</small
+						>
+					</p>
+					<input
+						id="short-url"
+						name="short-url"
+						class="form-control form-control-lg mb-3"
+						type="text"
+						title="URL must be preceded by http:// or https://"
+						pattern="^https?:\/\/.*"
+						placeholder="https://example.com/"
+						required
+					/>
+					<button type="submit" class="btn btn-primary">
+						Submit
+					</button>
+				</div>
+			</form>
 
 			<div class="footer">
 				<p>
